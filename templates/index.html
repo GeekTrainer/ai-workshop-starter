@@ -39,11 +39,22 @@
                             <input type="file" id="upload-file" name="file" accept=".jpg,.jpeg,.png,.gif">
                             <input type="submit" id="submit-button" value="Upload">
                         </div>
-                        <img id="uploaded-image" src="/static/placeholder.png">
+                        <img id="uploaded-image" src="{{ image_uri }}">
                         <input type="button" id="upload-button" class="btn" value="Upload Photo">
                     </form>
                 </div>
             </div>
         </div>
+        <script type="text/javascript">
+            $(function() {
+                $("#upload-button").click(function() {
+                    $("#upload-file").click();
+                });
+        
+                $("#upload-file").change(function() {
+                    $("#submit-button").click();
+                });
+            });
+        </script>
     </body>
 </html>

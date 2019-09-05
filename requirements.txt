@@ -1,0 +1,9 @@
+# web framework
+flask
+# Azure SDK components
+azure-cognitiveservices-vision-computervision
+# System variables
+python-dotenv
+# REST calls
+requests
+azure-cognitiveservices-vision-face
