@@ -72,26 +72,23 @@
                 </div>
             </div>
         </div>
-        
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                <script type="text/javascript">
-                    // If flash messages are queued up, show them in a modal dialog
-                    var messages = {{ messages | safe }};
-                    body = $(".modal-body");
-                    body.empty();
-        
-                    for (i=0; i<messages.length; i++) {
-                        body.append("<h2>" +  messages[i] + "</h2>");
-                    }
-        
-                    $("#myModal").modal("show");
-                    
-                    $("#target_language").val("{{ target_language }}");
+        {% if messages %}
+            <script type="text/javascript">
+                // If messages are queued up, show them in a modal dialog
+                var messages = {{ messages | safe }};
+                body = $(".modal-body");
+                body.empty();
+    
+                for (i=0; i<messages.length; i++) {
+                    body.append("<h2>" +  messages[i] + "</h2>");
+                }
+    
+                $("#myModal").modal("show");
+                
+                $("#target_language").val("{{ target_language }}");
 
-                </script>
-            {% endif %}
-        {% endwith %} 
+            </script>
+        {% endif %}
         <script type="text/javascript">
             $(function() {
                 $("#upload-button").click(function() {
