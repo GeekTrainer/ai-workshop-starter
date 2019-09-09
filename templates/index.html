@@ -72,7 +72,7 @@
                 </div>
             </div>
         </div>
-        {% if messages %}
+        {% if messages and len(messages) > 0 %}
             <script type="text/javascript">
                 // If messages are queued up, show them in a modal dialog
                 var messages = {{ messages | safe }};
@@ -85,7 +85,7 @@
     
                 $("#myModal").modal("show");
                 
-                $("#target_language").val("{{ target_language }}");
+                $("#target_language").val("{{ target_language | safe }}");
 
             </script>
         {% endif %}
