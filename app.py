@@ -14,6 +14,7 @@ load_dotenv()
 
 # Create face_client
 
+# Create the application
 app = Flask(__name__)
 
 @app.route("/", methods=["GET"])
