@@ -16,10 +16,24 @@ load_dotenv()
 
 app = Flask(__name__)
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/", methods=["GET"])
 def index():
+    return render_template("index.html")
+
+@app.route("/translate", methods=["GET", "POST"])
+def translate():
     # Load image or placeholder
-    uri = get_image_uri(request)
+    image = get_image(request)
+
+    # Set the default for language translation
+    target_language = "en"
+    if request.form and "target_language" in request.form:
+        target_language = request.form["target_language"]
+
+    # If it"s a GET, just return the form
+    if request.method == "GET":
+        return render_template("translate.html", image_uri=image.uri, target_language=target_language)
+
     # Create a placeholder for messages
     messages = []
 
@@ -27,21 +41,49 @@ def index():
 
     # TODO: Add code to translate text
 
-    return render_template("index.html", image_uri=uri, messages=messages)
+    return render_template("translate.html", image_uri=image.uri, target_language=target_language, messages=messages)
 
 @app.route("/train", methods=["GET", "POST"])
 def train():
     # Load image or placeholder
-    image_uri = get_image_uri(request)
-    # Create a placeholder for messages
+    image = get_image(request)
+
+    # If it"s a GET, just return the form
+    if request.method == "GET":
+        return render_template("train.html", image_uri=image.uri)
+
+    # Retrieve name from form
+    name = ""
+    if "name" in request.form:
+        name = request.form["name"]
+
+    # Placeholder for messages
     messages = []
 
-    # TODO: Add code 
+    # TODO: Add code to create or update person
 
-def get_image_uri(request):
-    # Set a placeholder if no image is uploaded
-    uri = "/static/placeholder.png"
-    if request.method == "POST":
-        image = request.files["file"]
-        uri = "data:;base64," + base64.b64encode(image.read()).decode("utf-8")
-    return uri
+    return render_template("train.html", messages=messages, image_uri=image.uri)
+
+@app.route("/detect", methods=["GET", "POST"])
+def detect():
+    # Load image or placeholder
+    image = get_image(request)
+
+    # If it"s a GET, just return the form
+    if request.method == "GET":
+        return render_template("detect.html", image_uri=image.uri)
+
+    # Placeholder for message
+    messages = []
+
+    # TODO: Add code to detect people in picture
+
+    return render_template("detect.html", messages=messages, image_uri=image.uri)
+
+def get_image(request):
+    # Helper class 
+    from image import Image
+    if request.files:
+        return Image(request.files["file"])
+    else:
+        return Image()
