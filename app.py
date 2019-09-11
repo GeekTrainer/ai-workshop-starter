@@ -205,7 +205,11 @@ def detect_people(client: FaceClient, person_group_id, image):
     for face in identified_faces:
         # Get all candidates - who might this face be?
         candidates = face.candidates
-        
+
+        # If no candidates, continue
+        if len(candidates) == 0:
+            continue
+
         # Sort by most likely candidate
         candidates = sorted(candidates, key=(lambda candidate: candidate.confidence), reverse=True)
         
