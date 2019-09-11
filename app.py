@@ -10,6 +10,7 @@ load_dotenv()
 endpoint = os.environ["ENDPOINT"]
 vision_key = os.environ["VISION_KEY"]
 translate_key = os.environ["TRANSLATE_KEY"]
+face_key = os.environ["FACE_KEY"]
 
 # Create vision_client
 from msrest.authentication import CognitiveServicesCredentials
@@ -20,6 +21,12 @@ vision_credentials = CognitiveServicesCredentials(vision_key)
 vision_client = ComputerVisionClient(endpoint, vision_credentials)
 
 # Create face_client
+from azure.cognitiveservices.vision.face import FaceClient
+
+face_credentials = CognitiveServicesCredentials(face_key)
+face_client = FaceClient(endpoint, face_credentials)
+
+person_group_id = 'reactor'
 
 # Create the application
 app = Flask(__name__)
@@ -71,6 +78,7 @@ def train():
     messages = []
 
     # TODO: Add code to create or update person
+    messages = train_person(face_client, person_group_id, name, image.blob)
 
     return render_template("train.html", messages=messages, image_uri=image.uri)
 
@@ -87,6 +95,7 @@ def detect():
     messages = []
 
     # TODO: Add code to detect people in picture
+    messages = detect_people(face_client, person_group_id, image.blob)
 
     return render_template("detect.html", messages=messages, image_uri=image.uri)
 
@@ -149,3 +158,67 @@ def translate_text(lines, target_language, key):
 
     except Exception as e:
         return ["Error calling the Translator Text API"]
+
+def train_person(client, person_group_id, name, image):
+    # Try to create the group, and just pass if it doesn't exist
+    try:
+        client.person_group.create(person_group_id, name=person_group_id)
+    except:
+        pass
+
+    name = name.lower()
+
+    # No get_by_name function, so get all persons
+    people = client.person_group_person.list(person_group_id)
+
+    # See if one exists with our name
+    people_with_name = list(filter(lambda p: p.name == name, people))
+
+    if len(people_with_name) > 0:
+        person = people_with_name[0]
+        operation = "Updated"
+    else:
+        # Create if doesn't exist
+        person = client.person_group_person.create(person_group_id, name)
+        operation = "Created"
+
+    # Add the face to the person
+    client.person_group_person.add_face_from_stream(person_group_id, person.person_id, image)
+
+    # Retrain the model
+    client.person_group.train(person_group_id)
+
+    return ["{} {}".format(operation, name)]
+
+def detect_people(client: FaceClient, person_group_id, image):
+    # Find all faces in the image
+    faces = face_client.face.detect_with_stream(image)
+
+    # Get just the IDs (for identification)
+    face_ids = list(map((lambda face: face.face_id), faces))
+
+    # Identify the faces
+    identified_faces = face_client.face.identify(face_ids, person_group_id)
+
+    results = []
+    # Loop through each identified face
+    for face in identified_faces:
+        # Get all candidates - who might this face be?
+        candidates = face.candidates
+        
+        # Sort by most likely candidate
+        candidates = sorted(candidates, key=(lambda candidate: candidate.confidence), reverse=True)
+        
+        # Get just the top candidate
+        top_candidate = candidates[0]
+
+        # Ask our model who this person is
+        person = face_client.person_group_person.get(person_group_id, top_candidate.person_id)
+
+        # Add the person to the list of results
+        if top_candidate.confidence > .8:
+            results.append('I see ' + person.name)
+        else:
+            results.append('I think I see ' + person.name)
+
+    return results
