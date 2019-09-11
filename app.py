@@ -1,12 +1,9 @@
-# app.py
-import os, base64
+import os, base64, json, requests
 from flask import Flask, render_template, request
 
 # Load system variables with dotenv
 from dotenv import load_dotenv
 load_dotenv()
-
-# Load endpoint
 
 # Load keys
 
